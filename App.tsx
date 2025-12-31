@@ -67,7 +67,7 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8 antialiased">
       {/* Header */}
       <header className="mb-8 text-center">
         <div className="inline-flex items-center justify-center p-3 mb-6 rounded-2xl bg-red-600/10 border border-red-500/20">
