@@ -1,0 +1,5 @@
+{
+  "name": "CineSubz API Dashboard & Logic Fixer",
+  "description": "A developer-focused React application that fixes and demonstrates scraping logic for CineSubz, providing a complete, ready-to-use Express server script.",
+  "requestFramePermissions": []
+}
