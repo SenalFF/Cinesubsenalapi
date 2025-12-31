@@ -1,5 +1,5 @@
 {
-  "name": "CineSubz API Dashboard & Logic Fixer",
-  "description": "A developer-focused React application that fixes and demonstrates scraping logic for CineSubz, providing a complete, ready-to-use Express server script.",
+  "name": "Senal Tech - Ultimate Media API",
+  "description": "movie tv series cartoons ultimate - A high-performance scraping engine for movie, TV series, and cartoon metadata extraction with built-in Vercel deployment support.",
   "requestFramePermissions": []
 }

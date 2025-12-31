@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineSubz API Fixer</title>
+    <title>Senal Tech - Ultimate Media API</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +17,15 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
     </style>
 <script type="importmap">
 {
@@ -32,15 +41,14 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
     <div id="root">
-        <!-- Fallback while JS loads -->
         <div class="flex items-center justify-center min-h-screen">
             <div class="text-center">
-                <div class="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-slate-500 font-mono text-sm">Initializing CineSubz Engine...</p>
+                <div class="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                <h2 class="text-2xl font-bold text-slate-200">Senal Tech</h2>
+                <p class="text-slate-500 font-mono text-sm mt-2">Initializing Ultimate Engine...</p>
             </div>
         </div>
     </div>
-    <!-- Explicitly load the entry point -->
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>

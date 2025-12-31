@@ -1,6 +1,13 @@
 
 export const generateExpressScript = () => {
-  return `const express = require('express');
+  return `/**
+ * Senal Tech - Ultimate Media Scraper Engine v2.0
+ * movie tv series cartoons ultimate
+ * 
+ * High-performance Express.js server for CineSubz media extraction.
+ * Optimized for Movies, TV Series, and Cartoons.
+ */
+const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
@@ -12,30 +19,19 @@ const BASE_URL = 'https://cinesubz.co';
 app.use(cors());
 app.use(express.json());
 
+// Pro-tier headers to avoid bot detection
 const headers = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-  'Accept-Language': 'en-US,en;q=0.5',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Cache-Control': 'no-cache',
+  'Referer': BASE_URL
 };
 
 /**
- * Health Check Endpoint
+ * Sonic Cloud Transformation Matrix
+ * Maps legacy storage nodes to direct streaming/download URLs.
  */
-app.get('/health', async (req, res) => {
-  try {
-    const start = Date.now();
-    await axios.get(BASE_URL, { headers, timeout: 5000 });
-    res.json({
-      status: 'online',
-      latency: \`\${Date.now() - start}ms\`,
-      endpoints: ['/search', '/details', '/download', '/health']
-    });
-  } catch (error) {
-    res.status(503).json({ status: 'degraded', error: error.message });
-  }
-});
-
-// URL Transformation Logic for Direct Downloads (Sonic Cloud Mapping)
 const urlMappings = [
   { search: ['https://google.com/server11/1:/', 'https://google.com/server12/1:/', 'https://google.com/server13/1:/'], replace: 'https://cloud.sonic-cloud.online/server1/' },
   { search: ['https://google.com/server21/1:/', 'https://google.com/server22/1:/', 'https://google.com/server23/1:/'], replace: 'https://cloud.sonic-cloud.online/server2/' },
@@ -44,153 +40,197 @@ const urlMappings = [
   { search: ['https://google.com/server5/1:/'], replace: 'https://cloud.sonic-cloud.online/server5/' }
 ];
 
-function transformDownloadUrl(originalUrl) {
-  if (!originalUrl) return '';
-  let modifiedUrl = originalUrl;
-  let urlChanged = false;
-
+function transformUrl(raw) {
+  if (!raw || raw.startsWith('#')) return '';
+  let finalUrl = raw;
+  
+  // Apply Server Mappings
   for (const mapping of urlMappings) {
-    if (urlChanged) break;
-    for (const searchUrl of mapping.search) {
-      if (originalUrl.startsWith(searchUrl)) {
-        modifiedUrl = originalUrl.replace(searchUrl, mapping.replace);
-        if (modifiedUrl.includes(".mp4?bot=cscloud2bot&code=")) {
-          modifiedUrl = modifiedUrl.replace(".mp4?bot=cscloud2bot&code=", "?ext=mp4&bot=cscloud2bot&code=");
-        } else if (modifiedUrl.includes(".mp4")) {
-          modifiedUrl = modifiedUrl.replace(".mp4", "?ext=mp4");
-        } else if (modifiedUrl.includes(".mkv?bot=cscloud2bot&code=")) {
-          modifiedUrl = modifiedUrl.replace(".mkv?bot=cscloud2bot&code=", "?ext=mkv&bot=cscloud2bot&code=");
-        } else if (modifiedUrl.includes(".mkv")) {
-          modifiedUrl = modifiedUrl.replace(".mkv", "?ext=mkv");
-        } else if (modifiedUrl.includes(".zip")) {
-          modifiedUrl = modifiedUrl.replace(".zip", "?ext=zip");
-        }
-        urlChanged = true;
+    for (const pattern of mapping.search) {
+      if (finalUrl.startsWith(pattern)) {
+        finalUrl = finalUrl.replace(pattern, mapping.replace);
         break;
       }
     }
   }
-  return modifiedUrl;
+
+  // Inject proper query parameters for cloud streaming
+  if (finalUrl.includes('sonic-cloud.online')) {
+    finalUrl = finalUrl.replace(/\.mp4(\?|$)/, '?ext=mp4').replace(/\.mkv(\?|$)/, '?ext=mkv');
+    finalUrl = finalUrl.replace(/\.zip(\?|$)/, '?ext=zip');
+    // Ensure single query mark
+    finalUrl = finalUrl.replace('??', '?').replace('?ext=', '&ext=').replace('?bot=', '&bot=');
+    if (!finalUrl.includes('?') && finalUrl.includes('&')) finalUrl = finalUrl.replace('&', '?');
+  }
+  
+  return finalUrl;
 }
 
-// 1. Search Endpoint
+/**
+ * [GET] /health
+ * Diagnostics for server status and target site reachability.
+ */
+app.get('/health', async (req, res) => {
+  try {
+    const start = Date.now();
+    await axios.get(BASE_URL, { headers, timeout: 5000 });
+    res.json({
+      success: true,
+      engine: "Senal Tech v2.0",
+      status: "Online",
+      latency: \`\${Date.now() - start}ms\`,
+      target: "cinesubz.co"
+    });
+  } catch (err) {
+    res.status(503).json({ success: false, error: "Target unreachable", message: err.message });
+  }
+});
+
+/**
+ * [GET] /search?q={query}
+ * Fetches movie, series, and cartoon search results.
+ */
 app.get('/search', async (req, res) => {
   try {
-    const query = req.query.q;
-    if (!query) return res.status(400).json({ error: 'Missing query' });
-    const searchUrl = \`\${BASE_URL}/?s=\${encodeURIComponent(query)}\`;
-    const response = await axios.get(searchUrl, { headers });
-    const $ = cheerio.load(response.data);
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ error: "Missing query parameter 'q'" });
+    
+    const { data } = await axios.get(\`\${BASE_URL}/?s=\${encodeURIComponent(q)}\`, { headers });
+    const $ = cheerio.load(data);
     const results = [];
-    $('.item-box, .display-item, article').each((i, el) => {
+
+    $('.item-box, .result-item, .display-item, article').each((_, el) => {
       const $el = $(el);
-      const title = $el.find('.title a, h3 a, .entry-title a').first().text().trim();
+      const title = $el.find('h1, h2, h3, .title').first().text().trim();
       const url = $el.find('a').first().attr('href');
       const poster = $el.find('img').first().attr('src') || $el.find('img').attr('data-src');
-      const rating = $el.find('.imdb-score, .rating').text().trim();
+      const rating = $el.find('.imdb-score, .rating').text().trim() || 'N/A';
+
       if (title && url) {
         results.push({
           title,
-          type: url.includes('/tvshows/') ? 'tvshow' : 'movie',
+          type: url.includes('/tvshows/') ? 'tvshow' : (url.includes('/cartoons/') ? 'cartoon' : 'movie'),
           poster_url: poster,
-          rating: rating || 'N/A',
+          rating,
           movie_url: url
         });
       }
     });
-    res.json({ count: results.length, results });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    res.json({ success: true, count: results.length, results });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 2. Details Endpoint
+/**
+ * [GET] /details?url={page_url}
+ * Extracts metadata and all available quality entries.
+ */
 app.get('/details', async (req, res) => {
   try {
-    const url = req.query.url;
-    if (!url) return res.status(400).json({ error: 'Missing URL' });
-    const response = await axios.get(url, { headers });
-    const $ = cheerio.load(response.data);
-    const title = $('h1.entry-title').first().text().trim() || $('.sheader .data h1').text().trim();
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "Missing 'url' parameter" });
+
+    const { data } = await axios.get(url, { headers });
+    const $ = cheerio.load(data);
+
+    const title = $('.entry-title, .sheader h1').first().text().trim();
     const poster = $('meta[property="og:image"]').attr('content') || $('.poster img').first().attr('src');
-    const about = $('.wp-content p').first().text().trim() || $('.description p').first().text().trim() || $('meta[name="description"]').attr('content');
-    const imdb_rating = $('.imdb-score').first().text().trim() || $('.rating').first().text().trim() || 'N/A';
-    const year = $('.date').first().text().match(/\\d{4}/)?.[0] || 'N/A';
-    const details = {};
-    $('.custom_fields, .info-list li, .movie-info li').each((i, el) => {
-       const text = $(el).text();
-       if (text.includes(':')) {
-         const parts = text.split(':');
-         const key = parts[0].trim().toLowerCase();
-         const val = parts[1].trim();
-         details[key] = val;
-       }
-    });
-    const downloadLinks = [];
-    $('a').each((i, el) => {
-      const $a = $(el);
-      const href = $a.attr('href') || '';
-      const text = $a.text().trim();
-      if (href.includes('cinesubz.co/api-') || (href.includes('cinesubz.co') && text.match(/\\d+p/i))) {
-        const quality = text.match(/\\d+p/i)?.[0] || 'HD';
-        const sizeMatch = text.match(/(\\d+\\.?\\d*\\s*(?:GB|MB))/i);
-        const size = sizeMatch ? sizeMatch[1] : (details['size'] || 'N/A');
-        downloadLinks.push({ quality, size, countdown_url: href });
+    const description = $('.wp-content p, .description p').first().text().trim();
+    const imdb = $('.imdb-score, .rating').first().text().trim() || 'N/A';
+    
+    const meta = {};
+    $('.custom_fields, .info-list li').each((_, el) => {
+      const t = $(el).text();
+      if (t.includes(':')) {
+        const [k, v] = t.split(':');
+        meta[k.trim().toLowerCase()] = v.trim();
       }
     });
+
+    const download_links = [];
+    $('a').each((_, el) => {
+      const $a = $(el);
+      const h = $a.attr('href') || '';
+      const t = $a.text().trim();
+      
+      // Filter for download/api entry buttons
+      if (h.includes('/api-') || h.includes('/links/') || t.match(/\\d+p/i)) {
+        const quality = t.match(/\\d+p/i)?.[0] || '720p';
+        const size = t.match(/(\\d+\\.?\\d*\\s*(?:GB|MB))/i)?.[1] || meta['size'] || 'N/A';
+        download_links.push({ quality, size, countdown_url: h });
+      }
+    });
+
     res.json({
       success: true,
       data: {
-        movie_info: { title, year, imdb_rating, about, genres: details['genre'] || [], size: details['size'] || 'N/A' },
+        movie_info: { title, year: title.match(/\\d{4}/)?.[0] || 'N/A', rating: imdb, description },
         poster_url: poster,
-        download_links: [...new Map(downloadLinks.map(l => [l.countdown_url, l])).values()]
+        download_links: [...new Map(download_links.map(d => [d.countdown_url, d])).values()]
       }
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 3. Final Download Resolver
+/**
+ * [GET] /download?url={api_url}
+ * Resolves countdown/redirect pages into final direct cloud links.
+ */
 app.get('/download', async (req, res) => {
   try {
-    const url = req.query.url;
-    if (!url) return res.status(400).json({ error: 'Missing URL' });
-    const response = await axios.get(url, { headers });
-    const $ = cheerio.load(response.data);
-    const download_options = [];
-    $('a').each((i, el) => {
-        const $el = $(el);
-        const h = $el.attr('href') || '';
-        const t = $el.text().trim().toLowerCase();
-        const id = $el.attr('id');
-        if (h.includes('google.com/server') || h.includes('sonic-cloud.online')) {
-            download_options.push({ type: 'direct', label: 'Direct Download', download_url: transformDownloadUrl(h) });
-        }
-        if (h.includes('drive.google.com') || t.includes('google drive')) {
-            download_options.push({ type: 'google', label: 'Google Drive', download_url: h });
-        }
-        if (h.includes('mega.nz') || t.includes('mega')) {
-            download_options.push({ type: 'mega', label: 'Mega.nz', download_url: h });
-        }
-        if (h.includes('t.me/') || t.includes('telegram')) {
-            download_options.push({ type: 'telegram', label: 'Telegram', download_url: h });
-        }
-        if (id === 'link' && h) {
-             const type = h.includes('t.me') ? 'telegram' : (h.includes('drive.google') ? 'google' : 'direct');
-             download_options.push({ type, label: 'Primary Link', download_url: type === 'direct' ? transformDownloadUrl(h) : h });
-        }
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "Missing 'url' parameter" });
+
+    const { data } = await axios.get(url, { headers });
+    const $ = cheerio.load(data);
+    const resolved = [];
+
+    const add = (h, label, type) => {
+      if (!h || h.startsWith('#')) return;
+      resolved.push({ type, label, download_url: type === 'direct' ? transformUrl(h) : h });
+    };
+
+    // Parse Static Buttons
+    $('a').each((_, el) => {
+      const h = $(el).attr('href') || '';
+      const t = $(el).text().toLowerCase();
+      const id = $(el).attr('id');
+
+      if (h.includes('sonic-cloud.online') || h.includes('google.com/server')) add(h, "Sonic Cloud", "direct");
+      else if (h.includes('mega.nz')) add(h, "Mega.nz", "mega");
+      else if (h.includes('drive.google.com')) add(h, "Google Drive", "google");
+      else if (h.includes('t.me/')) add(h, "Telegram Fast", "telegram");
+      else if (id === 'link' || id === 'generate') {
+        const dType = h.includes('t.me') ? 'telegram' : (h.includes('drive.google') ? 'google' : 'direct');
+        add(h, "Direct Stream", dType);
+      }
     });
-    const uniqueOptions = [...new Map(download_options.map(o => [o.download_url, o])).values()];
-    res.json({ success: uniqueOptions.length > 0, count: uniqueOptions.length, download_options: uniqueOptions });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    // Parse Script Blocks (for hidden links)
+    $('script').each((_, el) => {
+      const content = $(el).html();
+      if (content && content.includes('href')) {
+        const found = content.match(/https?:\\\/\\\/[^\s'"]+/g);
+        if (found) found.forEach(u => {
+          const clean = u.replace(/\\\\/g, '').replace(/\\/g, '');
+          if (clean.includes('sonic-cloud.online')) add(clean, "Extracted Direct", "direct");
+        });
+      }
+    });
+
+    const unique = [...new Map(resolved.map(l => [l.download_url, l])).values()];
+    res.json({ success: unique.length > 0, count: unique.length, download_options: unique });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Export for Vercel and handle local listen
 if (require.main === module) {
-  app.listen(PORT, () => console.log(\`Server running locally on port \${PORT}\`));
+  app.listen(PORT, () => console.log(\`Senal Tech Engine v2.0 running on \${PORT}\`));
 }
 
 module.exports = app;`;
